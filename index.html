@@ -29,508 +29,337 @@ body{background:#0a1845;font-family:Arial,sans-serif;min-height:100vh;overflow-x
 .mode-btn{padding:6px 12px;border-radius:5px;font-weight:bold;font-size:12px;cursor:pointer;border:2px solid;transition:all .15s;user-select:none}
 .blurred{filter:blur(8px);user-select:none;pointer-events:none}
 .voice-wave{display:flex;gap:3px;align-items:flex-end;height:30px}
-.voice-wave span{width:4px;background:#00cfff;border-radius:2px;animation:wave 0.8s infinite ease-in-out}
-.voice-wave span:nth-child(2){animation-delay:.1s}
-.voice-wave span:nth-child(3){animation-delay:.2s}
-.voice-wave span:nth-child(4){animation-delay:.3s}
-.voice-wave span:nth-child(5){animation-delay:.4s}
+.voice-wave span{width:4px;background:#00cfff;border-radius:2px;animation:wave .8s infinite ease-in-out}
+.voice-wave span:nth-child(2){animation-delay:.1s}.voice-wave span:nth-child(3){animation-delay:.2s}
+.voice-wave span:nth-child(4){animation-delay:.3s}.voice-wave span:nth-child(5){animation-delay:.4s}
 @keyframes wave{0%,100%{height:6px}50%{height:24px}}
+.ticket-card{background:#fff;border-radius:8px;padding:10px;color:#111;font-family:'Courier New',monospace;font-size:11px;border:1px solid #ccc;box-shadow:2px 3px 8px rgba(0,0,0,.4);position:relative;overflow:hidden;width:170px;min-height:200px;flex-shrink:0}
+.ticket-result-banner{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:14px;font-weight:900;z-index:10;border-radius:8px}
+.barcode-lines{display:flex;gap:1px;height:22px;align-items:flex-end;overflow:hidden;margin:4px 0}
+.deck-wrap{position:relative;display:flex;align-items:flex-end;justify-content:center;min-height:80px;padding:10px 30px}
+.fanned{position:absolute;transition:transform .3s}
+@keyframes handoff{0%{opacity:1;transform:translateX(0)}100%{opacity:0;transform:translateX(-200px)}}
+.handing{animation:handoff .5s forwards}
+@keyframes scanpulse{0%,100%{border-color:#3a55aa}50%{border-color:#00cfff;box-shadow:0 0 16px #00cfff88}}
+.scanning-anim{animation:scanpulse .4s ease-in-out 4}
 @media(max-width:620px){.main-flex{flex-direction:column!important}}
 </style>
 </head>
-<body>
-<div id="root"></div>
+<body><div id="root"></div>
 <script type="text/babel">
 const {useState,useEffect,useRef,useCallback}=React;
 
-// ═══════════════════════ GAME CONFIG ═══════════════════════
+// ═══ GAME CONFIG ══════════════════════════════════════════════════════════════
 const GAMES={
-  macks:{id:'macks',name:'Lotto Macks',sub:'(Lotto Max)',sn:'LOTTO\nMACKS',col:'#ffcc00',
-    params:['boards','draws','encore'],bMax:10,dMax:10,eMax:10},
-  g650:{id:'g650',name:'Lotto 6/50',sub:'(Lotto 6/49)',sn:'LOTTO\n6/50',col:'#ffd700',
-    params:['boards','draws','encore','addOn'],bMax:10,dMax:10,eMax:10,aoLabel:'Play 6/50 Add-on?'},
-  ont50:{id:'ont50',name:"L'Ontario 50",sub:'(Ontario 49)',sn:"L'ONT\n50",col:'#ff8800',
-    params:['boards','draws','encore'],bMax:10,dMax:10,eMax:10},
-  lightning:{id:'lightning',name:'Lightning Lotts',sub:'(Lightning Lotto)',sn:'LTNG\nLOTTS',col:'#00cfff',
-    params:['boards'],bMax:5},
-  joker:{id:'joker',name:'Joker Lotto',sub:'(Poker Lotto)',sn:'JOKER\nLOTTO',col:'#dd44dd',
-    params:['selections','addOn'],sMax:3,aoLabel:'Play Joker Lotto?'},
-  powerbux:{id:'powerbux',name:'Power Bux',sub:'(Power Bucks)',sn:'POWER\nBUX',col:'#44ddaa',
-    params:['boards','draws'],bMax:10,dMax:10},
-  wheelrich:{id:'wheelrich',name:'Wheel of Riches',sub:'(Wheel of Fortune)',sn:'WHEEL\nRICHES',col:'#ff6644',
-    params:['boards','spins'],bMax:5,spinMax:5},
-  cardlotto:{id:'cardlotto',name:'Card Lotto',sub:'(Poker variant)',sn:'CARD\nLOTTO',col:'#88aaff',
-    params:['selections','addOn'],sMax:5,aoLabel:'Play Card Add-on?'},
-  duo:{id:'duo',name:'Duo Pick',sub:'(Pick 2)',sn:'DUO\nPICK',col:'#aaffaa',
-    params:['playType','wager','draws'],
-    playTypes:['Straight','Straight/Box'],wagers:[0.5,1,2],dMax:7},
-  triple:{id:'triple',name:'Triple Pick',sub:'(Pick 3)',sn:'TRIPLE\nPICK',col:'#ffaacc',
-    params:['playType','wager','draws'],
-    playTypes:['Straight','Box','S+B','Combo'],wagers:[0.5,1,2],dMax:7},
-  quad:{id:'quad',name:'Quad Pick',sub:'(Pick 4)',sn:'QUAD\nPICK',col:'#ccaaff',
-    params:['playType','wager','draws'],
-    playTypes:['Straight','Box','S+B','Combo','Front Pair','Back Pair'],wagers:[0.5,1],dMax:7},
+  macks:{id:'macks',name:'Lotto Macks',sub:'(Lotto Max)',sn:'LOTTO\nMACKS',col:'#ffcc00',params:['boards','draws','encore'],bMax:10,dMax:10,eMax:10},
+  g650:{id:'g650',name:'Lotto 6/50',sub:'(Lotto 6/49)',sn:'LOTTO\n6/50',col:'#ffd700',params:['boards','draws','encore','addOn'],bMax:10,dMax:10,eMax:10,aoLabel:'Play 6/50 Add-on?'},
+  ont50:{id:'ont50',name:"L'Ontario 50",sub:'(Ontario 49)',sn:"L'ONT\n50",col:'#ff8800',params:['boards','draws','encore'],bMax:10,dMax:10,eMax:10},
+  lightning:{id:'lightning',name:'Lightning Lotts',sub:'(Lightning Lotto)',sn:'LTNG\nLOTTS',col:'#00cfff',params:['boards'],bMax:5},
+  joker:{id:'joker',name:'Joker Lotto',sub:'(Poker Lotto)',sn:'JOKER\nLOTTO',col:'#dd44dd',params:['selections','addOn'],sMax:3,aoLabel:'Play Joker Lotto?'},
+  powerbux:{id:'powerbux',name:'Power Bux',sub:'(Power Bucks)',sn:'POWER\nBUX',col:'#44ddaa',params:['boards','draws'],bMax:10,dMax:10},
+  wheelrich:{id:'wheelrich',name:'Wheel of Riches',sub:'(Wheel of Fortune)',sn:'WHEEL\nRICHES',col:'#ff6644',params:['boards','spins'],bMax:5,spinMax:5},
+  cardlotto:{id:'cardlotto',name:'Card Lotto',sub:'(Poker variant)',sn:'CARD\nLOTTO',col:'#88aaff',params:['selections','addOn'],sMax:5,aoLabel:'Play Card Add-on?'},
+  duo:{id:'duo',name:'Duo Pick',sub:'(Pick 2)',sn:'DUO\nPICK',col:'#aaffaa',params:['playType','wager','draws'],playTypes:['Straight','Straight/Box'],wagers:[0.5,1,2],dMax:7},
+  triple:{id:'triple',name:'Triple Pick',sub:'(Pick 3)',sn:'TRIPLE\nPICK',col:'#ffaacc',params:['playType','wager','draws'],playTypes:['Straight','Box','S+B','Combo'],wagers:[0.5,1,2],dMax:7},
+  quad:{id:'quad',name:'Quad Pick',sub:'(Pick 4)',sn:'QUAD\nPICK',col:'#ccaaff',params:['playType','wager','draws'],playTypes:['Straight','Box','S+B','Combo','Front Pair','Back Pair'],wagers:[0.5,1],dMax:7},
 };
-
 const DIFF_INFO={
   easy:{label:'Easy',emoji:'🟢',desc:'Clear standard English'},
   medium:{label:'Medium',emoji:'🟡',desc:'Casual with some slang'},
   hard:{label:'Hard',emoji:'🔴',desc:'Heavy slang, curses, twists'},
   insane:{label:'Ich Will Sterben',emoji:'💀',desc:'Pure chaos. God help you.'},
 };
-
 const rng=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 
-// ═══════════════════════ NUMBER SLANG ═══════════════════════
+// ═══ SENTENCE BUILDERS (unchanged from v2) ════════════════════════════════════
 const numWord=(n,diff)=>{
   if(diff==='easy') return String(n);
-  const medMap={0:'zero',1:'one',2:'two',3:'three',4:'four',5:'five',6:'six',7:'seven',8:'eight',9:'nine',10:'ten'};
-  if(diff==='medium') return pick([String(n), medMap[n]||String(n)]);
-  // hard / insane
-  const slangMap={
-    0:['zero','none','zilch','zip','nada'],
-    1:['one','uno','a single','just one'],
-    2:['two','a couple','a deuce','dos','two of em'],
-    3:['three','a trey','a few','tres'],
-    4:['four','a quad','four of em'],
-    5:['five','a fiver','five-o'],
-    6:['six','half a dozen'],
-    7:['seven','lucky seven'],
-    8:['eight'],
-    9:['nine'],
-    10:['ten','a tenner','ten of those'],
-  };
-  return pick(slangMap[n]||[String(n)]);
+  const med={0:'zero',1:'one',2:'two',3:'three',4:'four',5:'five',6:'six',7:'seven',8:'eight',9:'nine',10:'ten'};
+  if(diff==='medium') return pick([String(n),med[n]||String(n)]);
+  const sl={0:['zero','zilch','zip'],1:['one','uno','a single'],2:['two','a couple','a deuce'],3:['three','a trey','a few'],4:['four','a quad'],5:['five','a fiver'],6:['six','half a dozen'],7:['seven'],8:['eight'],9:['nine'],10:['ten','a tenner']};
+  return pick(sl[n]||[String(n)]);
 };
-
-// ═══════════════════════ GAME NICKNAMES ═══════════════════════
 const gameName=(gid,diff)=>{
   const g=GAMES[gid];
   if(diff==='easy'||diff==='medium') return g.name;
-  const nicks={
-    macks:['the Macks','Lotto Macks','the big one','that Max thing','the million one'],
-    g650:['the six-fifty','six-forty-nine style','the six-fifty one','that number game'],
-    ont50:["the Ontario one","l'Ontario fifty","the provincial one","the Ontario thing"],
-    lightning:['the lightning one','lightning thing','the quick one','the zappy one'],
-    joker:['the joker thing','joker lotto','the card poker one','joker'],
-    powerbux:['the power one','power bux','power bucks thing'],
-    wheelrich:['the wheel one','wheel of riches','the spinner','that wheel game'],
-    cardlotto:['card lotto','the other card one','big card game'],
-    duo:['pick two','the two-number thing','duo pick','the double'],
-    triple:['pick three','the three-digit thing','triple pick','the three-number game'],
-    quad:['pick four','quad pick','the four-number thing'],
-  };
-  return pick(nicks[gid]||[g.name]);
+  const nk={macks:['the Macks','the big one','that Max thing'],g650:['six-fifty','that number game','the six-forty-nine'],ont50:["the Ontario one","l'Ontario fifty"],lightning:['the lightning one','the quick one'],joker:['the joker thing','the card poker one'],powerbux:['the power one','power bux'],wheelrich:['the wheel one','that spinner game'],cardlotto:['card lotto','the other card one'],duo:['pick two','the double'],triple:['pick three','triple pick'],quad:['pick four','quad pick']};
+  return pick(nk[gid]||[g.name]);
 };
-
-// ═══════════════════════ ENCORE / ADDON PHRASES ═══════════════════════
 const encorePhrase=(n,diff)=>{
-  if(n===0){
-    if(diff==='easy') return 'no encore';
-    if(diff==='medium') return pick(['no encore','skip the encore','no extra']);
-    return pick(['no encore','skip the extras','no add-on crap','forget the encore','zero encore bud']);
-  }
-  if(diff==='easy') return `${n} encore`;
-  if(diff==='medium') return pick([`${n} encore`,`${numWord(n,diff)} encore`]);
-  return pick([`${numWord(n,diff)} encore`,`throw in ${numWord(n,diff)} encore`,`add ${numWord(n,diff)} of those encore things`]);
+  if(n===0){if(diff==='easy')return 'no encore';if(diff==='medium')return pick(['no encore','skip the encore']);return pick(['no encore','skip the extras','forget the encore']);}
+  if(diff==='easy')return `${n} encore`;
+  if(diff==='medium')return pick([`${n} encore`,`${numWord(n,diff)} encore`]);
+  return pick([`${numWord(n,diff)} encore`,`throw in ${numWord(n,diff)} encore`]);
 };
-
-// ═══════════════════════ SENTENCE BUILDERS ═══════════════════════
-const OPENERS_EASY=['Can I get','Please give me','I would like','Give me','I need'];
-const OPENERS_MED=['Yeah gimme','Can I get','Lemme get','Give me','Hey gimme'];
-const OPENERS_HARD=['Yo gimme','Oi bud gimme','Heyyy, can I get','Listen I need','Bud I want','Aight lemme get'];
-const OPENERS_INSANE=["Oh for the love of—gimme","So uh... right, I want","Jesus okay so","Hold on— alright— give me","OKAY so listen","Friggin' hell, can I just get"];
-
-function buildEasy(o,g){
-  const op=pick(OPENERS_EASY);
-  if(g.id==='lightning') return cap(`${op} ${g.name}, ${o.boards} board${o.boards>1?'s':''}.`);
-  if(g.id==='joker') return cap(`${op} ${g.name}, ${o.selections} selection${o.selections>1?'s':''}, ${o.addOn?'yes to the add-on':'no add-on'}.`);
-  if(g.id==='powerbux') return cap(`${op} ${g.name}, ${o.boards} board${o.boards>1?'s':''}, ${o.draws} draw${o.draws>1?'s':''}.`);
-  if(g.id==='wheelrich') return cap(`${op} ${g.name}, ${o.boards} board${o.boards>1?'s':''}, ${o.spins} spin${o.spins>1?'s':''}.`);
-  if(g.id==='cardlotto') return cap(`${op} ${g.name}, ${o.selections} selection${o.selections>1?'s':''}, ${o.addOn?'yes add-on':'no add-on'}.`);
-  if(['duo','triple','quad'].includes(g.id)) return cap(`${op} ${g.name}, ${o.playType} play, ${o.wager===0.5?'fifty cents':'$'+o.wager}, ${o.draws} draw${o.draws>1?'s':''}.`);
-  // standard boards/draws/encore
-  let s=`${op} ${g.name}, ${o.boards} board${o.boards>1?'s':''}, ${o.draws} draw${o.draws>1?'s':''}, ${encorePhrase(o.encore,'easy')}`;
-  if(g.id==='g650') s+=`, ${o.addOn?'yes to the 6/50 add-on':'no 6/50 add-on'}`;
-  return cap(s+'.');
-}
-
-function buildMedium(o,g){
-  const op=pick(OPENERS_MED);
-  const bw=o.boards>1?'boards':'board';
-  const dw=o.draws>1?'draws':'draw';
-  if(g.id==='lightning') return cap(`${op} ${g.name}, ${numWord(o.boards,'medium')} ${bw} please.`);
-  if(g.id==='joker') return cap(`${op} ${g.name}, ${numWord(o.selections,'medium')} selection${o.selections>1?'s':''}, ${o.addOn?'yeah add the joker':'skip the add-on'}.`);
-  if(g.id==='powerbux') return cap(`${op} ${g.name}, ${numWord(o.boards,'medium')} ${bw}, ${numWord(o.draws,'medium')} ${dw}.`);
-  if(g.id==='wheelrich') return cap(`${op} ${g.name}, ${numWord(o.boards,'medium')} ${bw}, ${numWord(o.spins,'medium')} spin${o.spins>1?'s':''}.`);
-  if(g.id==='cardlotto') return cap(`${op} ${g.name}, ${numWord(o.selections,'medium')} selection${o.selections>1?'s':''}, ${o.addOn?'add-on yes':'no add-on'}.`);
-  if(['duo','triple','quad'].includes(g.id)){
-    const wl=o.wager===0.5?'fifty cents':o.wager===1?'a buck':'two bucks';
-    return cap(`${op} ${g.name}, go ${o.playType.toLowerCase()}, ${wl}, ${numWord(o.draws,'medium')} ${dw}.`);
-  }
-  let s=`${op} ${g.name}, ${numWord(o.boards,'medium')} ${bw}, ${numWord(o.draws,'medium')} ${dw}, ${encorePhrase(o.encore,'medium')}`;
-  if(g.id==='g650') s+=o.addOn?', and yeah add the six-fifty':' no six-fifty';
-  return cap(s+'.');
-}
-
-function buildHard(o,g){
-  const op=pick(OPENERS_HARD);
-  const gn=gameName(g.id,'hard');
-  const bw=o.boards>1?'boards':'board';
-  const dw=o.draws>1?'draws':'draw';
-  const eh=Math.random()>.6?' eh':'';
-  const bud=Math.random()>.5?' bud':'';
-  if(g.id==='lightning') return cap(`${op} ${gn}${bud}, ${numWord(o.boards,'hard')} ${bw}${eh}.`);
-  if(g.id==='joker') return cap(`${op} ${gn}, ${numWord(o.selections,'hard')} selection${o.selections>1?'s':''}${bud}, ${o.addOn?'yeah gimme the joker thing too':'nah skip the add-on'}${eh}.`);
-  if(g.id==='powerbux') return cap(`${op} ${gn}${bud}, ${numWord(o.boards,'hard')} ${bw}, pull it ${numWord(o.draws,'hard')} time${o.draws>1?'s':''}${eh}.`);
-  if(g.id==='wheelrich') return cap(`${op} ${gn}${bud}, ${numWord(o.boards,'hard')} ${bw}, spin it ${numWord(o.spins,'hard')} time${o.spins>1?'s':''}${eh}.`);
-  if(g.id==='cardlotto') return cap(`${op} ${gn}${bud}, ${numWord(o.selections,'hard')} selection${o.selections>1?'s':''}${eh}, ${o.addOn?'throw in the add-on':'skip the extra crap'}.`);
-  if(['duo','triple','quad'].includes(g.id)){
-    const wl=o.wager===0.5?'fifty cents':o.wager===1?'a loonie':'a toonie';
-    return cap(`${op} ${gn}${bud}, ${o.playType.toLowerCase()} play, ${wl}, ${numWord(o.draws,'hard')} ${dw}${eh}.`);
-  }
-  let s=`${op} ${gn}${bud}, ${numWord(o.boards,'hard')} ${bw}, run it ${numWord(o.draws,'hard')} time${o.draws>1?'s':''}${eh}, ${encorePhrase(o.encore,'hard')}`;
-  if(g.id==='g650') s+=o.addOn?', and yeah toss in the six-fifty':' no six-fifty nonsense';
-  return cap(s+'.');
-}
-
-function buildInsane(o,g){
-  const op=pick(OPENERS_INSANE);
-  const gn=gameName(g.id,'insane');
-  const wrongB=o.boards===1?2:(o.boards>1?o.boards-1:o.boards+1);
-  const wrongD=o.draws===1?2:(o.draws>1?o.draws-1:o.draws+1);
-  const bw=o.boards>1?'boards':'board';
-  const dw=o.draws>1?'draws':'draw';
-  const filler=pick(['holy smokes','Jesus','ugh','for f---s sake','oh my god','bloody hell','right so']);
-  const correct=pick(['wait no','actually','hold on','I mean','scratch that','no no no']);
-
-  if(g.id==='lightning'){
-    return cap(`${op} ${gn}... ${numWord(wrongB,'hard')} ${bw}... ${correct} ${numWord(o.boards,'hard')} ${bw}. Final answer.`);
-  }
-  if(g.id==='joker'){
-    const ws=o.selections===1?2:o.selections-1;
-    return cap(`${op} ${gn}, uh, ${numWord(ws,'hard')} selection${ws>1?'s':''}... ${correct}, ${numWord(o.selections,'hard')} selection${o.selections>1?'s':''}. And ${o.addOn?'yes':'no'}—${correct} ${o.addOn?'YES':'NO'} to the add-on. ${filler}.`);
-  }
-  if(['duo','triple','quad'].includes(g.id)){
-    const wl=o.wager===0.5?'fifty cents':o.wager===1?'a loonie':'a toonie';
-    const wrongPT=pick(g.playTypes.filter(t=>t!==o.playType))||o.playType;
-    return cap(`${op} ${gn}, uh... ${wrongPT.toLowerCase()} play—${correct} ${o.playType.toLowerCase()} play, ${filler}, ${wl}, and... ${numWord(wrongD,'hard')} ${dw}—${correct} ${numWord(o.draws,'hard')} ${dw}. Done.`);
-  }
-  let s=`${op} ${gn}, `;
-  s+=`${numWord(wrongB,'hard')} ${bw}—${correct}, ${numWord(o.boards,'hard')} ${bw}, `;
-  s+=`run it ${numWord(wrongD,'hard')} time${wrongD>1?'s':''}—${correct} ${numWord(o.draws,'hard')} time${o.draws>1?'s':''}, ${filler}, `;
-  s+=`${encorePhrase(o.encore,'hard')}`;
-  if(g.id==='g650') s+=o.addOn?', and—yeah—yeah add the six-fifty, ${correct} YES add it':`, and ${correct}—NO six-fifty`;
-  return cap(s+'. Final answer. I think. Yeah.');
-}
-
+const OPENERS={easy:['Can I get','Please give me','I would like','Give me'],medium:['Yeah gimme','Can I get','Lemme get','Give me'],hard:['Yo gimme','Oi bud gimme','Heyyy can I get','Bud I want'],insane:['Oh for the love of—gimme','So uh... right, I want','Jesus okay so','OKAY so listen']};
 function buildSentence(o,g,diff){
-  if(diff==='easy') return buildEasy(o,g);
-  if(diff==='medium') return buildMedium(o,g);
-  if(diff==='hard') return buildHard(o,g);
-  return buildInsane(o,g);
+  const op=pick(OPENERS[diff]||OPENERS.easy);
+  const bw=o.boards>1?'boards':'board';const dw=o.draws>1?'draws':'draw';
+  const gn=gameName(g.id,diff);
+  if(diff==='insane'){
+    const wb=o.boards===1?2:o.boards-1;const wd=o.draws===1?2:o.draws-1;
+    const cr=pick(['wait no','actually','hold on','scratch that']);
+    if(['duo','triple','quad'].includes(g.id)){
+      const wp=pick(g.playTypes.filter(t=>t!==o.playType)||g.playTypes);
+      const wl=o.wager===.5?'fifty cents':o.wager===1?'a loonie':'a toonie';
+      return cap(`${op} ${gn}, ${wp.toLowerCase()} play—${cr} ${o.playType.toLowerCase()}, ${wl}, ${numWord(wd,diff)} ${dw}—${cr} ${numWord(o.draws,diff)} ${dw}. Final answer.`);
+    }
+    if(g.id==='lightning') return cap(`${op} ${gn}... ${numWord(wb,diff)} ${bw}... ${cr} ${numWord(o.boards,diff)}. Yeah.`);
+    let s=`${op} ${gn}, ${numWord(wb,diff)} ${bw}—${cr} ${numWord(o.boards,diff)} ${bw}, run it ${numWord(wd,diff)} times—${cr} ${numWord(o.draws,diff)}, ${encorePhrase(o.encore,diff)}`;
+    if(g.id==='g650') s+=o.addOn?', and—yes—add the six-fifty':' no six-fifty';
+    return cap(s+'. I think. Yeah.');
+  }
+  if(g.id==='lightning') return cap(`${op} ${gn}, ${numWord(o.boards,diff)} ${bw}.`);
+  if(g.id==='joker'||g.id==='cardlotto') return cap(`${op} ${gn}, ${numWord(o.selections,diff)} selection${o.selections>1?'s':''}, ${o.addOn?'yes to the add-on':'no add-on'}.`);
+  if(g.id==='powerbux') return cap(`${op} ${gn}, ${numWord(o.boards,diff)} ${bw}, ${numWord(o.draws,diff)} ${dw}.`);
+  if(g.id==='wheelrich') return cap(`${op} ${gn}, ${numWord(o.boards,diff)} ${bw}, ${numWord(o.spins,diff)} spin${o.spins>1?'s':''}.`);
+  if(['duo','triple','quad'].includes(g.id)){const wl=o.wager===.5?diff==='easy'?'fifty cents':'fitty cents':o.wager===1?diff==='easy'?'one dollar':'a loonie':'two dollars';return cap(`${op} ${gn}, ${o.playType.toLowerCase()} play, ${wl}, ${numWord(o.draws,diff)} ${dw}.`);}
+  let s=`${op} ${gn}, ${numWord(o.boards,diff)} ${bw}, ${numWord(o.draws,diff)} ${dw}, ${encorePhrase(o.encore,diff)}`;
+  if(g.id==='g650') s+=o.addOn?diff==='easy'?', yes to the 6/50 add-on':', toss in the six-fifty':' no six-fifty';
+  return cap(s+'.');
 }
-
-// ═══════════════════════ ORDER GENERATOR ═══════════════════════
 function generateOrder(diff){
-  const pool=['macks','macks','macks','g650','g650','g650','ont50','ont50','ont50',
-    'lightning','lightning','joker','joker','powerbux','wheelrich','cardlotto','duo','triple','quad'];
-  const gid=pick(pool);
-  const g=GAMES[gid];
-  const o={gameId:gid,diff};
+  const pool=['macks','macks','macks','g650','g650','g650','ont50','ont50','ont50','lightning','lightning','joker','joker','powerbux','wheelrich','cardlotto','duo','triple','quad'];
+  const gid=pick(pool);const g=GAMES[gid];const o={gameId:gid,diff};
   if(gid==='lightning'){o.boards=rng(1,5);}
   else if(gid==='joker'){o.selections=rng(1,3);o.addOn=Math.random()>.4;}
   else if(gid==='powerbux'){o.boards=rng(1,10);o.draws=rng(1,10);}
   else if(gid==='wheelrich'){o.boards=rng(1,5);o.spins=rng(1,5);}
   else if(gid==='cardlotto'){o.selections=rng(1,5);o.addOn=Math.random()>.4;}
-  else if(['duo','triple','quad'].includes(gid)){
-    o.playType=pick(g.playTypes);
-    o.wager=pick(g.wagers);
-    o.draws=rng(1,7);
-  } else {
-    o.boards=rng(1,5);o.draws=rng(1,5);
-    o.encore=Math.random()>.5?rng(1,3):0;
-    if(gid==='g650') o.addOn=Math.random()>.5;
-  }
+  else if(['duo','triple','quad'].includes(gid)){o.playType=pick(g.playTypes);o.wager=pick(g.wagers);o.draws=rng(1,7);}
+  else{o.boards=rng(1,5);o.draws=rng(1,5);o.encore=Math.random()>.5?rng(1,3):0;if(gid==='g650')o.addOn=Math.random()>.5;}
   o.sentence=buildSentence(o,g,diff);
   return o;
 }
 
-// ═══════════════════════ VALIDATE ═══════════════════════
+// ═══ SCAN TICKET GENERATOR ════════════════════════════════════════════════════
+function generateScanTicket(){
+  const scannable=['macks','g650','ont50','lightning','powerbux','wheelrich'];
+  const gid=pick(scannable);const g=GAMES[gid];
+  const isWinner=Math.random()<0.35;
+  const winPool=[2,5,5,10,10,10,20,20,50,100,500];
+  const winAmount=isWinner?pick(winPool):0;
+  const numCount=6;const maxN=gid==='macks'?50:49;
+  const nums=[];while(nums.length<numCount){const n=rng(1,maxN);if(!nums.includes(n))nums.push(n);}nums.sort((a,b)=>a-b);
+  const bonus=rng(1,20);
+  const boards=rng(1,3);
+  const days=rng(0,6);
+  const d=new Date(Date.now()-days*86400000);
+  const drawDate=d.toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'});
+  const ticketId=Math.random().toString(36).substr(2,4).toUpperCase()+'-'+Math.random().toString(36).substr(2,4).toUpperCase();
+  let customerWants;
+  if(isWinner) customerWants=winAmount>=50?pick(['cash','cash','playAgain']):pick(['cash','playAgain','playAgain']);
+  else customerWants=pick(['buyNew','leave','leave']);
+  const presentPhrases=["Can you scan this for me?","Check this ticket please.","Is this a winner?","Scan this bud.","Can you check my ticket?","Here, can you scan this?"];
+  const winReactions={cash:["Oh nice! Cash me out please.","I won! Give me the cash.","Sweet, I'll take the money.","Cash it out for me thanks."],playAgain:["I won! Use it to play again — give me "+g.name+".","Oh cool, put it on another "+g.name+" ticket.","I won! Play it again on "+g.name+" please."]};
+  const loseReactions={leave:["Dang. Oh well, thanks.","Not my day. See ya.","Worth a shot. Bye.","Nope. Thanks anyway."],buyNew:["Nothing? Gimme another "+g.name+" then.","Let me try one more "+g.name+".","Not a winner? One more please."]};
+  return{id:ticketId,gameId:gid,gameName:g.name,gameCol:g.col,nums,bonus,boards,drawDate,isWinner,winAmount,customerWants,presentPhrase:pick(presentPhrases),winReaction:isWinner?pick(winReactions[customerWants]||winReactions.cash):null,loseReaction:!isWinner?pick(loseReactions[customerWants]||loseReactions.leave):null};
+}
+
+// ═══ VALIDATE ORDER ═══════════════════════════════════════════════════════════
 function validate(order,usr){
-  const g=GAMES[order.gameId];
-  const errs=[],oks=[];
-  const chk=(cond,ok,err)=>{if(cond)oks.push(ok);else errs.push(err);};
-  chk(usr.selectedGame===order.gameId,
-    `✅ Correct game: ${g.name}`,
-    `❌ Game: picked "${GAMES[usr.selectedGame]?.name||'none'}" → should be "${g.name}"`);
-  if(order.gameId==='lightning'){
-    chk(Number(usr.boards)===order.boards,`✅ Boards: ${order.boards}`,`❌ Boards: picked ${usr.boards||'—'} → should be ${order.boards}`);
-  } else if(order.gameId==='joker'||order.gameId==='cardlotto'){
-    chk(Number(usr.selections)===order.selections,`✅ Selections: ${order.selections}`,`❌ Selections: picked ${usr.selections||'—'} → should be ${order.selections}`);
-    chk(usr.addOn===order.addOn,`✅ Add-on: ${order.addOn?'Yes':'No'}`,`❌ Add-on: picked ${usr.addOn==null?'—':usr.addOn?'Yes':'No'} → should be ${order.addOn?'Yes':'No'}`);
-  } else if(order.gameId==='powerbux'){
-    chk(Number(usr.boards)===order.boards,`✅ Boards: ${order.boards}`,`❌ Boards: picked ${usr.boards||'—'} → should be ${order.boards}`);
-    chk(Number(usr.draws)===order.draws,`✅ Draws: ${order.draws}`,`❌ Draws: picked ${usr.draws||'—'} → should be ${order.draws}`);
-  } else if(order.gameId==='wheelrich'){
-    chk(Number(usr.boards)===order.boards,`✅ Boards: ${order.boards}`,`❌ Boards: picked ${usr.boards||'—'} → should be ${order.boards}`);
-    chk(Number(usr.spins)===order.spins,`✅ Spins: ${order.spins}`,`❌ Spins: picked ${usr.spins||'—'} → should be ${order.spins}`);
-  } else if(['duo','triple','quad'].includes(order.gameId)){
-    chk(usr.playType===order.playType,`✅ Play Type: ${order.playType}`,`❌ Play Type: picked "${usr.playType||'—'}" → should be "${order.playType}"`);
-    chk(Number(usr.wager)===order.wager,`✅ Wager: $${order.wager}`,`❌ Wager: picked $${usr.wager||'—'} → should be $${order.wager}`);
-    chk(Number(usr.draws)===order.draws,`✅ Draws: ${order.draws}`,`❌ Draws: picked ${usr.draws||'—'} → should be ${order.draws}`);
-  } else {
-    chk(Number(usr.boards)===order.boards,`✅ Boards: ${order.boards}`,`❌ Boards: picked ${usr.boards||'—'} → should be ${order.boards}`);
-    chk(Number(usr.draws)===order.draws,`✅ Draws: ${order.draws}`,`❌ Draws: picked ${usr.draws||'—'} → should be ${order.draws}`);
-    chk(Number(usr.encore)===order.encore,`✅ Encore: ${order.encore}`,`❌ Encore: picked ${usr.encore===null?'—':usr.encore} → should be ${order.encore}`);
-    if(order.gameId==='g650') chk(usr.addOn===order.addOn,`✅ 6/50 Add-on: ${order.addOn?'Yes':'No'}`,`❌ 6/50 Add-on: picked ${usr.addOn==null?'—':usr.addOn?'Yes':'No'} → should be ${order.addOn?'Yes':'No'}`);
-  }
-  return {isCorrect:errs.length===0,errs,oks};
+  const g=GAMES[order.gameId];const errs=[],oks=[];
+  const chk=(c,ok,err)=>{if(c)oks.push(ok);else errs.push(err);};
+  chk(usr.selectedGame===order.gameId,`✅ Correct game: ${g.name}`,`❌ Game: picked "${GAMES[usr.selectedGame]?.name||'none'}" → should be "${g.name}"`);
+  if(order.gameId==='lightning') chk(Number(usr.boards)===order.boards,`✅ Boards: ${order.boards}`,`❌ Boards: ${usr.boards||'—'} → should be ${order.boards}`);
+  else if(order.gameId==='joker'||order.gameId==='cardlotto'){chk(Number(usr.selections)===order.selections,`✅ Selections: ${order.selections}`,`❌ Selections: ${usr.selections||'—'} → ${order.selections}`);chk(usr.addOn===order.addOn,`✅ Add-on: ${order.addOn?'Yes':'No'}`,`❌ Add-on: ${usr.addOn==null?'—':usr.addOn?'Yes':'No'} → ${order.addOn?'Yes':'No'}`);}
+  else if(order.gameId==='powerbux'){chk(Number(usr.boards)===order.boards,`✅ Boards: ${order.boards}`,`❌ Boards: ${usr.boards||'—'} → ${order.boards}`);chk(Number(usr.draws)===order.draws,`✅ Draws: ${order.draws}`,`❌ Draws: ${usr.draws||'—'} → ${order.draws}`);}
+  else if(order.gameId==='wheelrich'){chk(Number(usr.boards)===order.boards,`✅ Boards: ${order.boards}`,`❌ Boards: ${usr.boards||'—'} → ${order.boards}`);chk(Number(usr.spins)===order.spins,`✅ Spins: ${order.spins}`,`❌ Spins: ${usr.spins||'—'} → ${order.spins}`);}
+  else if(['duo','triple','quad'].includes(order.gameId)){chk(usr.playType===order.playType,`✅ Play Type: ${order.playType}`,`❌ Play Type: "${usr.playType||'—'}" → "${order.playType}"`);chk(Number(usr.wager)===order.wager,`✅ Wager: $${order.wager}`,`❌ Wager: $${usr.wager||'—'} → $${order.wager}`);chk(Number(usr.draws)===order.draws,`✅ Draws: ${order.draws}`,`❌ Draws: ${usr.draws||'—'} → ${order.draws}`);}
+  else{chk(Number(usr.boards)===order.boards,`✅ Boards: ${order.boards}`,`❌ Boards: ${usr.boards||'—'} → ${order.boards}`);chk(Number(usr.draws)===order.draws,`✅ Draws: ${order.draws}`,`❌ Draws: ${usr.draws||'—'} → ${order.draws}`);chk(Number(usr.encore)===order.encore,`✅ Encore: ${order.encore}`,`❌ Encore: ${usr.encore===null?'—':usr.encore} → ${order.encore}`);if(order.gameId==='g650')chk(usr.addOn===order.addOn,`✅ 6/50 Add-on: ${order.addOn?'Yes':'No'}`,`❌ 6/50 Add-on: ${usr.addOn==null?'—':usr.addOn?'Yes':'No'} → ${order.addOn?'Yes':'No'}`);}
+  return{isCorrect:errs.length===0,errs,oks};
 }
 
-// ═══════════════════════ VOICE SYSTEM ═══════════════════════
-let voicesLoaded=false;
-const loadVoices=()=>new Promise(res=>{
-  const v=window.speechSynthesis.getVoices();
-  if(v.length){voicesLoaded=true;res(v);return;}
-  window.speechSynthesis.onvoiceschanged=()=>{voicesLoaded=true;res(window.speechSynthesis.getVoices());};
-});
+// ═══ VOICE ════════════════════════════════════════════════════════════════════
+const loadVoices=()=>new Promise(res=>{const v=window.speechSynthesis.getVoices();if(v.length){res(v);return;}window.speechSynthesis.onvoiceschanged=()=>res(window.speechSynthesis.getVoices());});
+function pickVoice(gender,voices){const mk=['male','Male','David','david','James','james','Daniel','daniel','Alex','alex','Tom','tom'];const fk=['female','Female','Samantha','samantha','Victoria','victoria','Karen','karen','Zira','zira'];const en=voices.filter(v=>v.lang.startsWith('en'));const kws=gender==='male'?mk:fk;const pool=en.filter(v=>kws.some(k=>v.name.includes(k)));if(pool.length)return pick(pool);return en.length>1?(gender==='male'?en[0]:en[1]):en[0]||voices[0]||null;}
+function speak(text,gender,diff,onEnd){window.speechSynthesis.cancel();loadVoices().then(voices=>{const voice=pickVoice(gender,voices);const utt=new SpeechSynthesisUtterance(text);if(voice)utt.voice=voice;utt.lang='en-CA';utt.rate=diff==='easy'?.82:diff==='medium'?.88:diff==='hard'?.95:pick([1.0,1.08]);utt.pitch=gender==='female'?1.15:.85;utt.onend=onEnd;utt.onerror=onEnd;window.speechSynthesis.speak(utt);});}
 
-function pickVoice(gender,voices){
-  const maleKw=['male','Male','David','david','James','james','Daniel','daniel','Alex','alex','Tom','tom','Fred','fred','Guy','guy','Mark','mark','Mike','mike'];
-  const femKw=['female','Female','Samantha','samantha','Victoria','victoria','Karen','karen','Zira','zira','Hazel','hazel','Moira','moira','Allison','allison','Susan','susan'];
-  const en=voices.filter(v=>v.lang.startsWith('en'));
-  const kws=gender==='male'?maleKw:femKw;
-  const pool=en.filter(v=>kws.some(k=>v.name.includes(k)));
-  if(pool.length) return pick(pool);
-  // fallback: split by index
-  if(en.length>1) return gender==='male'?en[0]:en[1];
-  return en[0]||voices[0]||null;
+// ═══ TICKET CARD VISUAL ═══════════════════════════════════════════════════════
+function Barcode(){
+  const bars=Array.from({length:40},()=>({w:rng(1,3),h:rng(60,100)}));
+  return(<div className="barcode-lines">{bars.map((b,i)=><div key={i} style={{width:b.w,height:`${b.h}%`,background:'#111',flexShrink:0}}/>)}</div>);
 }
-
-function speak(text,gender,diff,onEnd){
-  window.speechSynthesis.cancel();
-  loadVoices().then(voices=>{
-    const voice=pickVoice(gender,voices);
-    const utt=new SpeechSynthesisUtterance(text);
-    if(voice) utt.voice=voice;
-    utt.lang='en-CA';
-    utt.rate=diff==='easy'?.82:diff==='medium'?.88:diff==='hard'?.95:pick([1.0,1.05,1.1]);
-    utt.pitch=gender==='female'?1.15:.85;
-    utt.volume=1;
-    utt.onend=onEnd;
-    utt.onerror=onEnd;
-    window.speechSynthesis.speak(utt);
-  });
-}
-
-// ═══════════════════════ COMPONENTS ═══════════════════════
-function NumCol({label,values,selected,onSelect,disabled}){
+function TicketCard({ticket,revealed,mini}){
+  const g=GAMES[ticket.gameId];
+  const sz=mini?{width:100,fontSize:8,padding:6}:{width:170,fontSize:11,padding:10};
   return(
-    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
-      <div className="col-lbl">{label}</div>
-      {values.map(v=>(
-        <button key={v} className={`num-btn${selected===v?' sel':''}`}
-          style={disabled?{opacity:.5,cursor:'not-allowed'}:{}}
-          onClick={!disabled?()=>onSelect(v):undefined}>{v}</button>
-      ))}
-    </div>
-  );
-}
-
-function ChipRow({label,options,selected,onSelect,disabled,format}){
-  return(
-    <div style={{marginBottom:10}}>
-      <div className="col-lbl" style={{textAlign:'left',marginBottom:4}}>{label}</div>
-      <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-        {options.map(o=>(
-          <button key={o} className={`chip-btn${selected===o?' sel':''}`}
-            style={disabled?{opacity:.5,cursor:'not-allowed'}:{}}
-            onClick={!disabled?()=>onSelect(o):undefined}>
-            {format?format(o):o}
-          </button>
+    <div className="ticket-card" style={{...sz,minHeight:mini?120:200}}>
+      <div style={{background:g.col,color:'#111',fontWeight:900,fontSize:mini?9:12,padding:'4px 6px',margin:`-${sz.padding}px -${sz.padding}px ${sz.padding}px`,letterSpacing:1}}>
+        {ticket.gameName.toUpperCase()}
+      </div>
+      <div style={{color:'#555',fontSize:mini?7:9,marginBottom:4}}>{ticket.drawDate} • {ticket.boards} Board{ticket.boards>1?'s':''}</div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:3,marginBottom:4}}>
+        {ticket.nums.map((n,i)=>(
+          <div key={i} style={{background:'#1a3a8c',color:'white',borderRadius:'50%',width:mini?14:20,height:mini?14:20,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:'bold',fontSize:mini?7:10}}>
+            {String(n).padStart(2,'0')}
+          </div>
         ))}
       </div>
+      {!mini&&<div style={{color:'#555',fontSize:9,marginBottom:4}}>BONUS: {String(ticket.bonus).padStart(2,'0')}</div>}
+      {!mini&&<Barcode/>}
+      <div style={{color:'#888',fontSize:mini?6:8,textAlign:'center'}}>{ticket.id}</div>
+      {revealed&&(
+        <div className="ticket-result-banner" style={{background:ticket.isWinner?'rgba(0,150,0,.92)':'rgba(160,0,0,.92)',color:'white'}}>
+          {ticket.isWinner?<>🎉<div style={{fontSize:16,fontWeight:900}}>WINNER!</div><div style={{fontSize:18}}>${ticket.winAmount}.00</div></>:<><div style={{fontSize:14,fontWeight:900}}>❌ NOT A</div><div style={{fontSize:14,fontWeight:900}}>WINNER</div></>}
+        </div>
+      )}
     </div>
   );
 }
 
-function YesNoRow({label,value,onChange,disabled}){
+// ═══ PRINT DECK ═══════════════════════════════════════════════════════════════
+function PrintDeck({tickets,onHand,handing}){
+  if(!tickets.length) return null;
+  const angles=[-10,-5,0,5,10,14,-14];
+  const offsets=[-22,-11,0,11,22,28,-28];
   return(
-    <div style={{marginTop:10}}>
-      <div className="col-lbl" style={{textAlign:'left',marginBottom:4}}>{label}</div>
-      <div style={{display:'flex',gap:8}}>
-        {['Yes','No'].map(opt=>{
-          const sel=opt==='Yes'?value===true:value===false;
-          return(
-            <button key={opt} className={`chip-btn${sel?' sel':''}`}
-              style={disabled?{opacity:.5,cursor:'not-allowed'}:{}}
-              onClick={!disabled?()=>onChange(opt==='Yes'):undefined}>{opt}</button>
-          );
-        })}
+    <div style={{background:'rgba(8,20,70,.7)',border:'2px solid #3a5aaa',borderRadius:8,padding:'10px 14px'}}>
+      <div style={{color:'#ffd700',fontWeight:'bold',fontSize:11,marginBottom:8,letterSpacing:1}}>
+        PRINT TRAY — {tickets.length} TICKET{tickets.length>1?'S':''}
       </div>
-    </div>
-  );
-}
-
-function GameScreen({game,usr,setUsr,locked}){
-  if(!game) return(
-    <div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:12,padding:20,background:'rgba(0,0,0,.2)',borderRadius:8,border:'2px dashed #3a5aaa',minHeight:200}}>
-      <div style={{fontSize:32}}>👆</div>
-      <div style={{color:'#8899cc',fontSize:13,textAlign:'center'}}>Select a game from the top bar</div>
-    </div>
-  );
-  const rng2=(a,b)=>Array.from({length:b-a+1},(_,i)=>a+i);
-  const D=locked;
-  const S=(k,v)=>setUsr(p=>({...p,[k]:v}));
-  return(
-    <div style={{background:'rgba(8,20,70,.7)',border:'2px solid #3a5aaa',borderRadius:8,padding:14,minHeight:200}}>
-      <div style={{marginBottom:10,display:'flex',alignItems:'center',gap:8}}>
-        <span style={{color:game.col,fontWeight:'bold',fontSize:15}}>{game.name}</span>
-        <span style={{color:'#6677aa',fontSize:11}}>{game.sub}</span>
-      </div>
-      <div style={{display:'flex',gap:14,flexWrap:'wrap',alignItems:'flex-start'}}>
-        {game.id==='lightning'&&(
-          <NumCol label="# Boards" values={rng2(1,5)} selected={usr.boards} onSelect={v=>S('boards',v)} disabled={D}/>
-        )}
-        {(game.id==='joker'||game.id==='cardlotto')&&(<>
-          <NumCol label="# Selections" values={rng2(1,game.sMax)} selected={usr.selections} onSelect={v=>S('selections',v)} disabled={D}/>
-          <YesNoRow label={game.aoLabel} value={usr.addOn} onChange={v=>S('addOn',v)} disabled={D}/>
-        </>)}
-        {game.id==='powerbux'&&(<>
-          <NumCol label="# Boards" values={rng2(1,10)} selected={usr.boards} onSelect={v=>S('boards',v)} disabled={D}/>
-          <NumCol label="# Draws" values={rng2(1,10)} selected={usr.draws} onSelect={v=>S('draws',v)} disabled={D}/>
-        </>)}
-        {game.id==='wheelrich'&&(<>
-          <NumCol label="# Boards" values={rng2(1,5)} selected={usr.boards} onSelect={v=>S('boards',v)} disabled={D}/>
-          <NumCol label="# Spins" values={rng2(1,5)} selected={usr.spins} onSelect={v=>S('spins',v)} disabled={D}/>
-        </>)}
-        {['duo','triple','quad'].includes(game.id)&&(
-          <div style={{flex:1}}>
-            <ChipRow label="Play Type" options={game.playTypes} selected={usr.playType} onSelect={v=>S('playType',v)} disabled={D}/>
-            <ChipRow label="Wager" options={game.wagers} selected={usr.wager} onSelect={v=>S('wager',v)} disabled={D} format={v=>v===.5?'$0.50':v===1?'$1.00':'$2.00'}/>
-            <div style={{display:'flex',gap:14,flexWrap:'wrap',marginTop:4}}>
-              <NumCol label="# Draws" values={rng2(1,7)} selected={usr.draws} onSelect={v=>S('draws',v)} disabled={D}/>
-            </div>
-          </div>
-        )}
-        {['macks','g650','ont50'].includes(game.id)&&(<>
-          <NumCol label="# Boards" values={rng2(1,10)} selected={usr.boards} onSelect={v=>S('boards',v)} disabled={D}/>
-          <NumCol label="# Draws" values={rng2(1,10)} selected={usr.draws} onSelect={v=>S('draws',v)} disabled={D}/>
-          <NumCol label="# Encore" values={rng2(0,10)} selected={usr.encore} onSelect={v=>S('encore',v)} disabled={D}/>
-          {game.id==='g650'&&<YesNoRow label="Play 6/50 Add-on?" value={usr.addOn} onChange={v=>S('addOn',v)} disabled={D}/>}
-        </>)}
-      </div>
-    </div>
-  );
-}
-
-function TopBar({selected,onSelect}){
-  return(
-    <div style={{background:'#070e30',borderBottom:'2px solid #2a40aa',padding:'5px 7px',display:'flex',gap:5,flexWrap:'wrap',alignItems:'center'}}>
-      <span style={{color:'#ffd700',fontWeight:'bold',fontSize:10,marginRight:3,flexShrink:0}}>GAME:</span>
-      {Object.values(GAMES).map(g=>(
-        <button key={g.id} className={`game-tab${selected===g.id?' act':''}`} onClick={()=>onSelect(g.id)}>
-          <span style={{color:g.col,fontSize:9,fontWeight:'bold',whiteSpace:'pre-line',lineHeight:1.2,textAlign:'center'}}>{g.sn}</span>
+      <div style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+        <div style={{position:'relative',width:tickets.length>1?200:120,height:130}}>
+          {tickets.map((t,i)=>{
+            const angle=tickets.length>1?angles[i%angles.length]:0;
+            const ox=tickets.length>1?offsets[i%offsets.length]:0;
+            return(
+              <div key={t._printId} className={`fanned${handing?' handing':''}`}
+                style={{position:'absolute',left:'50%',bottom:0,transform:`translateX(calc(-50% + ${ox}px)) rotate(${angle}deg)`,transformOrigin:'bottom center',zIndex:i}}>
+                <TicketCard ticket={t} revealed={false} mini={true}/>
+              </div>
+            );
+          })}
+        </div>
+        <button className="act-btn"
+          style={{background:'#005588',borderColor:'#0099ff',color:'white'}}
+          onClick={onHand} disabled={handing}>
+          {handing?'Handing over...':'🤝 Hand to Customer →'}
         </button>
-      ))}
-      <div style={{marginLeft:'auto',padding:'3px 8px',background:'#003300',border:'2px solid #00bb00',borderRadius:4,color:'#00ff44',fontSize:10,fontWeight:'bold'}}>READY</div>
-    </div>
-  );
-}
-
-function VoiceControls({isPlaying,onPlay,onStop,gender,revealed}){
-  return(
-    <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
-      <button className="act-btn" style={{background:'#004488',borderColor:'#0088ff',color:'white'}}
-        onClick={onPlay} disabled={isPlaying}>
-        {isPlaying?'🔊 Playing...':'▶ Play Order'}
-      </button>
-      {isPlaying&&<button className="act-btn" style={{background:'#440000',borderColor:'#bb0000',color:'white'}} onClick={onStop}>⏹ Stop</button>}
-      <div style={{display:'flex',alignItems:'center',gap:6,color:'#8899cc',fontSize:12}}>
-        {gender==='female'?'👩 Female voice':'👨 Male voice'}
-        {isPlaying&&(
-          <div className="voice-wave">
-            <span/><span/><span/><span/><span/>
-          </div>
-        )}
       </div>
-      {!revealed&&<div style={{color:'#ffcc44',fontSize:11}}>🔒 Text hidden until you answer</div>}
     </div>
   );
 }
 
-function OrderPanel({order,isVoice,onPlay,onStop,isPlaying,voiceGender,result,textRevealed,onNext}){
+// ═══ SCAN PANEL ═══════════════════════════════════════════════════════════════
+function ScanPanel({ticket,scanPhase,onScan,scanning}){
+  return(
+    <div style={{background:'rgba(8,20,70,.7)',border:'2px solid #3a5aaa',borderRadius:8,padding:14}}>
+      <div style={{color:'#ffd700',fontWeight:'bold',fontSize:11,marginBottom:10,letterSpacing:1}}>SCAN TERMINAL</div>
+      {scanPhase==='presenting'&&(
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:12}}>
+          <div style={{color:'#aab0cc',fontSize:12,textAlign:'center'}}>Customer has presented a ticket for scanning</div>
+          <div style={{width:60,height:60,border:`3px solid ${scanning?'#00cfff':'#3a5aaa'}`,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',fontSize:30,transition:'all .3s',boxShadow:scanning?'0 0 20px #00cfff':'none'}} className={scanning?'scanning-anim':''}>
+            📷
+          </div>
+          <button className="act-btn"
+            style={{background:scanning?'#004466':'#005588',borderColor:'#0099ff',color:'white'}}
+            onClick={onScan} disabled={scanning}>
+            {scanning?'Scanning...':'▶ Scan Ticket'}
+          </button>
+        </div>
+      )}
+      {scanPhase!=='presenting'&&(
+        <div style={{color:'#88ff88',fontSize:13,textAlign:'center',padding:10}}>
+          ✅ Ticket scanned — see result on customer side
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══ GAME SCREEN ══════════════════════════════════════════════════════════════
+function NumCol({label,values,selected,onSelect,disabled}){return(<div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2}}><div className="col-lbl">{label}</div>{values.map(v=><button key={v} className={`num-btn${selected===v?' sel':''}`} style={disabled?{opacity:.5,cursor:'not-allowed'}:{}} onClick={!disabled?()=>onSelect(v):undefined}>{v}</button>)}</div>);}
+function ChipRow({label,options,selected,onSelect,disabled,format}){return(<div style={{marginBottom:10}}><div className="col-lbl" style={{textAlign:'left',marginBottom:4}}>{label}</div><div style={{display:'flex',gap:6,flexWrap:'wrap'}}>{options.map(o=><button key={o} className={`chip-btn${selected===o?' sel':''}`} style={disabled?{opacity:.5,cursor:'not-allowed'}:{}} onClick={!disabled?()=>onSelect(o):undefined}>{format?format(o):o}</button>)}</div></div>);}
+function YesNoRow({label,value,onChange,disabled}){return(<div style={{marginTop:10}}><div className="col-lbl" style={{textAlign:'left',marginBottom:4}}>{label}</div><div style={{display:'flex',gap:8}}>{['Yes','No'].map(opt=>{const sel=opt==='Yes'?value===true:value===false;return(<button key={opt} className={`chip-btn${sel?' sel':''}`} style={disabled?{opacity:.5,cursor:'not-allowed'}:{}} onClick={!disabled?()=>onChange(opt==='Yes'):undefined}>{opt}</button>);})}</div></div>);}
+function GameScreen({game,usr,setUsr,locked}){
+  if(!game)return(<div style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:12,padding:20,background:'rgba(0,0,0,.2)',borderRadius:8,border:'2px dashed #3a5aaa',minHeight:200}}><div style={{fontSize:32}}>👆</div><div style={{color:'#8899cc',fontSize:13,textAlign:'center'}}>Select a game from the top bar</div></div>);
+  const r2=(a,b)=>Array.from({length:b-a+1},(_,i)=>a+i);const D=locked;const S=(k,v)=>setUsr(p=>({...p,[k]:v}));
+  return(<div style={{background:'rgba(8,20,70,.7)',border:'2px solid #3a5aaa',borderRadius:8,padding:14,minHeight:180}}><div style={{marginBottom:10,display:'flex',alignItems:'center',gap:8}}><span style={{color:game.col,fontWeight:'bold',fontSize:15}}>{game.name}</span><span style={{color:'#6677aa',fontSize:11}}>{game.sub}</span></div><div style={{display:'flex',gap:14,flexWrap:'wrap',alignItems:'flex-start'}}>{game.id==='lightning'&&<NumCol label="# Boards" values={r2(1,5)} selected={usr.boards} onSelect={v=>S('boards',v)} disabled={D}/>}{(game.id==='joker'||game.id==='cardlotto')&&<><NumCol label="# Selections" values={r2(1,game.sMax)} selected={usr.selections} onSelect={v=>S('selections',v)} disabled={D}/><YesNoRow label={game.aoLabel} value={usr.addOn} onChange={v=>S('addOn',v)} disabled={D}/></>}{game.id==='powerbux'&&<><NumCol label="# Boards" values={r2(1,10)} selected={usr.boards} onSelect={v=>S('boards',v)} disabled={D}/><NumCol label="# Draws" values={r2(1,10)} selected={usr.draws} onSelect={v=>S('draws',v)} disabled={D}/></>}{game.id==='wheelrich'&&<><NumCol label="# Boards" values={r2(1,5)} selected={usr.boards} onSelect={v=>S('boards',v)} disabled={D}/><NumCol label="# Spins" values={r2(1,5)} selected={usr.spins} onSelect={v=>S('spins',v)} disabled={D}/></>}{['duo','triple','quad'].includes(game.id)&&<div style={{flex:1}}><ChipRow label="Play Type" options={game.playTypes} selected={usr.playType} onSelect={v=>S('playType',v)} disabled={D}/><ChipRow label="Wager" options={game.wagers} selected={usr.wager} onSelect={v=>S('wager',v)} disabled={D} format={v=>v===.5?'$0.50':v===1?'$1.00':'$2.00'}/><div style={{display:'flex',gap:14,marginTop:4}}><NumCol label="# Draws" values={r2(1,7)} selected={usr.draws} onSelect={v=>S('draws',v)} disabled={D}/></div></div>}{['macks','g650','ont50'].includes(game.id)&&<><NumCol label="# Boards" values={r2(1,10)} selected={usr.boards} onSelect={v=>S('boards',v)} disabled={D}/><NumCol label="# Draws" values={r2(1,10)} selected={usr.draws} onSelect={v=>S('draws',v)} disabled={D}/><NumCol label="# Encore" values={r2(0,10)} selected={usr.encore} onSelect={v=>S('encore',v)} disabled={D}/>{game.id==='g650'&&<YesNoRow label="Play 6/50 Add-on?" value={usr.addOn} onChange={v=>S('addOn',v)} disabled={D}/>}</> }</div></div>);
+}
+
+// ═══ CUSTOMER PANEL ═══════════════════════════════════════════════════════════
+function CustomerPanel({scenarioType,order,scanTicket,scanPhase,isVoice,isPlaying,voiceGender,onPlay,onStop,result,textRevealed,winResult,customerDecision,onNext}){
+  const reaction=scanTicket?( scanTicket.isWinner?scanTicket.winReaction:scanTicket.loseReaction ):null;
   return(
     <div style={{background:'rgba(8,20,70,.85)',border:'2px solid #3a5aaa',borderRadius:8,padding:14}}>
-      <div style={{color:'#ffd700',fontWeight:'bold',fontSize:11,marginBottom:8,letterSpacing:1}}>CUSTOMER ORDER</div>
-      {isVoice?(
-        <div style={{marginBottom:12}}>
-          <VoiceControls isPlaying={isPlaying} onPlay={onPlay} onStop={onStop} gender={voiceGender} revealed={textRevealed}/>
-          <div style={{marginTop:10,background:'rgba(0,0,0,.3)',borderRadius:6,padding:10,border:'1px solid #2a40aa',minHeight:48}}>
-            {textRevealed?(
-              <span style={{fontSize:14,color:'white',lineHeight:1.5,fontStyle:'italic'}}>"{order.sentence}"</span>
-            ):(
-              <div className={!result?'blurred':''}>
-                <span style={{fontSize:14,color:'white',lineHeight:1.5,fontStyle:'italic'}}>"{order.sentence}"</span>
-              </div>
-            )}
+      <div style={{color:'#ffd700',fontWeight:'bold',fontSize:11,marginBottom:8,letterSpacing:1}}>
+        👤 CUSTOMER {scenarioType==='scan'?'— TICKET CHECK':'— ORDER'}
+      </div>
+
+      {/* Speech bubble */}
+      <div style={{background:'rgba(0,0,0,.3)',borderRadius:6,padding:10,marginBottom:10,border:'1px solid #2a40aa',position:'relative'}}>
+        {scenarioType==='scan'?(
+          <span style={{fontSize:13,color:'white',fontStyle:'italic'}}>"{scanTicket.presentPhrase}"</span>
+        ):isVoice?(
+          <div>
+            <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:8}}>
+              <button className="act-btn" style={{background:'#004488',borderColor:'#0088ff',color:'white'}} onClick={onPlay} disabled={isPlaying}>
+                {isPlaying?'🔊 Playing...':'▶ Play Order'}
+              </button>
+              {isPlaying&&<button className="act-btn" style={{background:'#440000',borderColor:'#bb0000',color:'white'}} onClick={onStop}>⏹</button>}
+              <span style={{color:'#8899cc',fontSize:11}}>{voiceGender==='female'?'👩':'👨'} {isPlaying&&<span className="voice-wave"><span/><span/><span/><span/><span/></span>}</span>}
+            </div>
+            <div className={!result&&!textRevealed?'blurred':''}>
+              <span style={{fontSize:13,color:'white',fontStyle:'italic'}}>"{order?.sentence}"</span>
+            </div>
           </div>
-        </div>
-      ):(
-        <div style={{background:'rgba(0,0,0,.3)',borderRadius:6,padding:12,marginBottom:12,border:'1px solid #2a40aa'}}>
-          <span style={{fontSize:14,color:'white',lineHeight:1.5,fontStyle:'italic'}}>"{order.sentence}"</span>
+        ):(
+          <span style={{fontSize:13,color:'white',lineHeight:1.5,fontStyle:'italic'}}>"{order?.sentence}"</span>
+        )}
+      </div>
+
+      {/* Ticket visual for scan scenarios */}
+      {scenarioType==='scan'&&scanTicket&&(
+        <div style={{display:'flex',justifyContent:'center',marginBottom:10}}>
+          <TicketCard ticket={scanTicket} revealed={scanPhase==='revealed'||scanPhase==='deciding'||scanPhase==='playAgain'||scanPhase==='done'} mini={false}/>
         </div>
       )}
+
+      {/* Customer reaction after scan */}
+      {scanPhase==='revealed'&&reaction&&(
+        <div style={{background:'rgba(0,0,0,.3)',borderRadius:6,padding:8,marginBottom:8,border:'1px solid #3a5aaa'}}>
+          <div style={{color:'#aab0cc',fontSize:10,marginBottom:2}}>Customer reacts:</div>
+          <span style={{fontSize:13,color:scanTicket?.isWinner?'#88ff88':'#ffaa88',fontStyle:'italic'}}>"{reaction}"</span>
+        </div>
+      )}
+
+      {/* Win budget indicator for play-again */}
+      {scanPhase==='playAgain'&&scanTicket?.isWinner&&(
+        <div style={{background:'rgba(0,100,0,.3)',border:'1px solid #00aa00',borderRadius:6,padding:8,marginBottom:8}}>
+          <div style={{color:'#88ff88',fontWeight:'bold',fontSize:12}}>💰 Customer Budget: ${scanTicket.winAmount}.00</div>
+          <div style={{color:'#aab0cc',fontSize:10}}>Now process their new ticket order below</div>
+        </div>
+      )}
+
+      {/* Order result */}
       {result&&(
-        <div style={{background:result.isCorrect?'rgba(0,80,0,.4)':'rgba(100,0,0,.4)',borderRadius:6,padding:8,marginBottom:10,border:`1px solid ${result.isCorrect?'#00cc00':'#cc0000'}`}}>
-          <div style={{fontWeight:'bold',fontSize:13,color:result.isCorrect?'#00ff66':'#ff5555'}}>
-            {result.isCorrect?'✅ CORRECT! Well done!':'❌ INCORRECT — See circles below'}
-          </div>
+        <div style={{background:result.isCorrect?'rgba(0,80,0,.4)':'rgba(100,0,0,.4)',borderRadius:6,padding:8,marginBottom:8,border:`1px solid ${result.isCorrect?'#00cc00':'#cc0000'}`}}>
+          <div style={{fontWeight:'bold',fontSize:12,color:result.isCorrect?'#00ff66':'#ff5555'}}>{result.isCorrect?'✅ CORRECT!':'❌ INCORRECT'}</div>
         </div>
       )}
-      <button className="act-btn" style={{background:'#005500',borderColor:'#00aa00',color:'white',width:'100%'}} onClick={onNext}>
-        🔄 Next Order
-      </button>
+
+      <button className="act-btn" style={{background:'#005500',borderColor:'#00aa00',color:'white',width:'100%'}} onClick={onNext}>🔄 Next Scenario</button>
     </div>
   );
 }
 
-function AttemptCircle({attempt,num,isActive,onClick}){
-  const bg=attempt?(attempt.isCorrect?'#005500':'#770000'):'#222';
-  const bc=attempt?(attempt.isCorrect?'#00ee44':'#ee3333'):'#555';
-  return(
-    <button className="circ" style={{background:bg,borderColor:bc,color:'white',opacity:attempt?1:.35}}
-      onClick={attempt?onClick:undefined} title={attempt?'Click for details':'Not attempted'}>
-      {num}
-    </button>
-  );
-}
-
+// ═══ ATTEMPTS PANEL ═══════════════════════════════════════════════════════════
 function AttemptsPanel({attempts,activeIdx,setActiveIdx}){
   const slots=Array.from({length:20},(_,i)=>i);
   const correct=attempts.filter(a=>a.isCorrect).length;
   return(
     <div style={{background:'rgba(8,20,70,.85)',border:'2px solid #3a5aaa',borderRadius:8,padding:14}}>
-      <div style={{color:'#ffd700',fontWeight:'bold',fontSize:11,marginBottom:8,letterSpacing:1}}>
-        ATTEMPTS {attempts.length>0&&`— ${correct}/${attempts.length} (${Math.round(correct/attempts.length*100)}%)`}
-      </div>
+      <div style={{color:'#ffd700',fontWeight:'bold',fontSize:11,marginBottom:8,letterSpacing:1}}>ATTEMPTS{attempts.length>0?` — ${correct}/${attempts.length} (${Math.round(correct/attempts.length*100)}%)`:''}</div>
       <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:8}}>
-        {slots.map(i=>(
-          <AttemptCircle key={i} attempt={attempts[i]} num={i+1}
-            isActive={activeIdx===i} onClick={()=>setActiveIdx(activeIdx===i?null:i)}/>
-        ))}
+        {slots.map(i=>{const a=attempts[i];const bg=a?(a.isCorrect?'#005500':'#770000'):'#222';const bc=a?(a.isCorrect?'#00ee44':'#ee3333'):'#555';return(<button key={i} className="circ" style={{background:bg,borderColor:bc,color:'white',opacity:a?1:.35}} onClick={a?()=>setActiveIdx(activeIdx===i?null:i):undefined}>{i+1}</button>);})}
       </div>
       {activeIdx!==null&&attempts[activeIdx]&&(
         <div style={{background:'rgba(0,0,0,.35)',borderRadius:6,padding:10,border:'1px solid #2a40aa',fontSize:11}}>
-          <div style={{fontWeight:'bold',color:'#ffd700',marginBottom:5}}>
-            Attempt #{activeIdx+1} — {attempts[activeIdx].isCorrect?'✅':'❌'} — {GAMES[attempts[activeIdx].order.gameId]?.name}
-          </div>
-          <div style={{color:'#aab0cc',marginBottom:5,fontStyle:'italic',fontSize:10}}>
-            "{attempts[activeIdx].order.sentence}"
-          </div>
+          <div style={{fontWeight:'bold',color:'#ffd700',marginBottom:4}}>#{activeIdx+1} — {attempts[activeIdx].isCorrect?'✅':'❌'} — {attempts[activeIdx].type==='scan'?'Ticket Scan':GAMES[attempts[activeIdx].order?.gameId]?.name}</div>
+          <div style={{color:'#aab0cc',marginBottom:4,fontStyle:'italic',fontSize:10}}>"{attempts[activeIdx].order?.sentence||attempts[activeIdx].desc}"</div>
           {attempts[activeIdx].oks.map((m,i)=><div key={i} style={{color:'#88ff88',margin:'2px 0'}}>{m}</div>)}
           {attempts[activeIdx].errs.map((m,i)=><div key={i} style={{color:'#ff8888',margin:'2px 0'}}>{m}</div>)}
         </div>
@@ -539,108 +368,108 @@ function AttemptsPanel({attempts,activeIdx,setActiveIdx}){
   );
 }
 
+// ═══ SETTINGS SCREEN ══════════════════════════════════════════════════════════
 function SettingsScreen({diff,setDiff,mode,setMode,onStart}){
-  return(
-    <div style={{minHeight:'100vh',background:'linear-gradient(180deg,#1a3a8c,#0a1845)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}}>
-      <div style={{maxWidth:500,width:'100%',background:'rgba(8,20,70,.9)',border:'2px solid #3a5aaa',borderRadius:12,padding:28}}>
-        <div style={{textAlign:'center',marginBottom:24}}>
-          <div style={{fontSize:28,marginBottom:6}}>🎰</div>
-          <div style={{color:'#ffd700',fontWeight:'bold',fontSize:18,letterSpacing:2}}>LOTTERY TRAINING</div>
-          <div style={{color:'#8899cc',fontSize:12,marginTop:4}}>Convenience Store Simulator — Training Mode</div>
-        </div>
-
-        <div style={{marginBottom:20}}>
-          <div style={{color:'#ffd700',fontWeight:'bold',fontSize:12,marginBottom:10,letterSpacing:1}}>DIFFICULTY</div>
-          <div style={{display:'flex',flexDirection:'column',gap:7}}>
-            {Object.entries(DIFF_INFO).map(([k,v])=>(
-              <button key={k} className="diff-btn"
-                style={{background:diff===k?'#1a3a8c':'#0d1a50',
-                  borderColor:diff===k?'#ffd700':'#3a5aaa',
-                  color:diff===k?'#ffd700':'#8899cc',textAlign:'left',padding:'10px 14px'}}
-                onClick={()=>setDiff(k)}>
-                <span style={{marginRight:8}}>{v.emoji}</span>
-                <span style={{fontWeight:'bold'}}>{v.label}</span>
-                <span style={{fontSize:11,marginLeft:8,opacity:.8}}>{v.desc}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div style={{marginBottom:24}}>
-          <div style={{color:'#ffd700',fontWeight:'bold',fontSize:12,marginBottom:10,letterSpacing:1}}>ORDER MODE</div>
-          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-            {[['text','📝 Text Only'],['voice','🔊 Voice Only'],['random','🎲 Random Mix']].map(([k,lbl])=>(
-              <button key={k} className={`mode-btn${mode===k?' sel':''}`}
-                style={mode===k?{background:'#1a3a8c',borderColor:'#ffd700',color:'#ffd700'}:{background:'#0d1a50',borderColor:'#3a5aaa',color:'#8899cc'}}
-                onClick={()=>setMode(k)}>{lbl}</button>
-            ))}
-          </div>
-        </div>
-
-        <button className="act-btn"
-          style={{width:'100%',background:'#005500',borderColor:'#00aa00',color:'white',fontSize:15,padding:'12px'}}
-          onClick={onStart}>
-          🚀 Start Training
-        </button>
-      </div>
-    </div>
-  );
+  return(<div style={{minHeight:'100vh',background:'linear-gradient(180deg,#1a3a8c,#0a1845)',display:'flex',alignItems:'center',justifyContent:'center',padding:20}}><div style={{maxWidth:500,width:'100%',background:'rgba(8,20,70,.9)',border:'2px solid #3a5aaa',borderRadius:12,padding:28}}><div style={{textAlign:'center',marginBottom:24}}><div style={{fontSize:28,marginBottom:6}}>🎰</div><div style={{color:'#ffd700',fontWeight:'bold',fontSize:18,letterSpacing:2}}>LOTTERY TRAINING</div><div style={{color:'#8899cc',fontSize:12,marginTop:4}}>Convenience Store Simulator — Canco Edition</div></div><div style={{marginBottom:20}}><div style={{color:'#ffd700',fontWeight:'bold',fontSize:12,marginBottom:10,letterSpacing:1}}>DIFFICULTY</div><div style={{display:'flex',flexDirection:'column',gap:7}}>{Object.entries(DIFF_INFO).map(([k,v])=><button key={k} className="diff-btn" style={{background:diff===k?'#1a3a8c':'#0d1a50',borderColor:diff===k?'#ffd700':'#3a5aaa',color:diff===k?'#ffd700':'#8899cc',textAlign:'left',padding:'10px 14px'}} onClick={()=>setDiff(k)}><span style={{marginRight:8}}>{v.emoji}</span><span style={{fontWeight:'bold'}}>{v.label}</span><span style={{fontSize:11,marginLeft:8,opacity:.8}}>{v.desc}</span></button>)}</div></div><div style={{marginBottom:24}}><div style={{color:'#ffd700',fontWeight:'bold',fontSize:12,marginBottom:10,letterSpacing:1}}>ORDER MODE</div><div style={{display:'flex',gap:8,flexWrap:'wrap'}}>{[['text','📝 Text Only'],['voice','🔊 Voice Only'],['random','🎲 Random Mix']].map(([k,lbl])=><button key={k} className={`mode-btn${mode===k?' sel':''}`} style={mode===k?{background:'#1a3a8c',borderColor:'#ffd700',color:'#ffd700'}:{background:'#0d1a50',borderColor:'#3a5aaa',color:'#8899cc'}} onClick={()=>setMode(k)}>{lbl}</button>)}</div></div><button className="act-btn" style={{width:'100%',background:'#005500',borderColor:'#00aa00',color:'white',fontSize:15,padding:'12px'}} onClick={onStart}>🚀 Start Training</button></div></div>);
 }
 
-// ═══════════════════════ APP ═══════════════════════
+// ═══ TOP BAR ══════════════════════════════════════════════════════════════════
+function TopBar({selected,onSelect}){return(<div style={{background:'#070e30',borderBottom:'2px solid #2a40aa',padding:'5px 7px',display:'flex',gap:5,flexWrap:'wrap',alignItems:'center'}}><span style={{color:'#ffd700',fontWeight:'bold',fontSize:10,marginRight:3,flexShrink:0}}>GAME:</span>{Object.values(GAMES).map(g=><button key={g.id} className={`game-tab${selected===g.id?' act':''}`} onClick={()=>onSelect(g.id)}><span style={{color:g.col,fontSize:9,fontWeight:'bold',whiteSpace:'pre-line',lineHeight:1.2,textAlign:'center'}}>{g.sn}</span></button>)}<div style={{marginLeft:'auto',padding:'3px 8px',background:'#003300',border:'2px solid #00bb00',borderRadius:4,color:'#00ff44',fontSize:10,fontWeight:'bold'}}>READY</div></div>);}
+
+// ═══ APP ══════════════════════════════════════════════════════════════════════
 const defaultUsr={selectedGame:null,boards:null,draws:null,encore:null,selections:null,spins:null,addOn:null,playType:null,wager:null};
 
 function App(){
   const [screen,setScreen]=useState('settings');
   const [diff,setDiff]=useState('easy');
   const [mode,setMode]=useState('text');
+  // Scenario state
+  const [scenarioType,setScenarioType]=useState('order'); // 'order'|'scan'
   const [order,setOrder]=useState(null);
+  const [scanTicket,setScanTicket]=useState(null);
+  const [scanPhase,setScanPhase]=useState('presenting'); // presenting|revealed|deciding|playAgain|done
+  const [scanning,setScanning]=useState(false);
+  // Order/usr state (used for both regular orders AND play-again sub-flow)
   const [usr,setUsr]=useState(defaultUsr);
   const [result,setResult]=useState(null);
+  const [printedTickets,setPrintedTickets]=useState([]);
+  const [handing,setHanding]=useState(false);
+  const [ticketsDone,setTicketsDone]=useState(false);
+  // Scan action state
+  const [userScanAction,setUserScanAction]=useState(null);
+  // Attempts
   const [attempts,setAttempts]=useState([]);
   const [activeIdx,setActiveIdx]=useState(null);
+  // Voice
   const [isVoice,setIsVoice]=useState(false);
   const [isPlaying,setIsPlaying]=useState(false);
   const [voiceGender,setVoiceGender]=useState('male');
   const [textRevealed,setTextRevealed]=useState(false);
+  // Scenario done flag
+  const [scenarioDone,setScenarioDone]=useState(false);
 
-  const startGame=useCallback(()=>{
-    const newOrder=generateOrder(diff);
-    const vm=mode==='random'?Math.random()>.5:mode==='voice';
+  const printIdRef=useRef(0);
+
+  const newScenario=useCallback(()=>{
+    window.speechSynthesis.cancel();setIsPlaying(false);
+    const isScan=Math.random()<0.25;
     const gender=Math.random()>.5?'male':'female';
-    setOrder(newOrder);setUsr(defaultUsr);setResult(null);
-    setIsVoice(vm);setVoiceGender(gender);setTextRevealed(!vm);
-    setScreen('game');
+    const vm=mode==='random'?Math.random()>.5:mode==='voice';
+    setUsr(defaultUsr);setResult(null);setPrintedTickets([]);setHanding(false);setTicketsDone(false);setUserScanAction(null);setScenarioDone(false);
+    if(isScan){
+      setScenarioType('scan');setOrder(null);
+      setScanTicket(generateScanTicket());setScanPhase('presenting');setScanning(false);
+      setIsVoice(false);setTextRevealed(true);
+    } else {
+      setScenarioType('order');setScanTicket(null);setScanPhase('presenting');
+      const o=generateOrder(diff);setOrder(o);
+      setIsVoice(vm);setVoiceGender(gender);setTextRevealed(!vm);
+    }
   },[diff,mode]);
 
-  const nextOrder=useCallback(()=>{
-    window.speechSynthesis.cancel();setIsPlaying(false);
-    const newOrder=generateOrder(diff);
-    const vm=mode==='random'?Math.random()>.5:mode==='voice';
-    const gender=Math.random()>.5?'male':'female';
-    setOrder(newOrder);setUsr(defaultUsr);setResult(null);
-    setIsVoice(vm);setVoiceGender(gender);setTextRevealed(!vm);
-  },[diff,mode]);
+  const startGame=useCallback(()=>{setScreen('game');newScenario();},[newScenario]);
 
-  const handleSelectGame=useCallback((id)=>{
-    if(result) return;
-    setUsr(p=>({...defaultUsr,selectedGame:id}));
-  },[result]);
-
-  const handlePlay=useCallback(()=>{
-    if(!order) return;
-    setIsPlaying(true);
-    speak(order.sentence,voiceGender,diff,()=>setIsPlaying(false));
-  },[order,voiceGender,diff]);
-
-  const handleStop=useCallback(()=>{
-    window.speechSynthesis.cancel();setIsPlaying(false);
+  // Scan ticket
+  const handleScan=useCallback(()=>{
+    setScanning(true);
+    setTimeout(()=>{setScanning(false);setScanPhase('revealed');},2000);
   },[]);
+
+  // Customer decision for scan scenarios
+  const handleScanDecision=(wants)=>{
+    setUserScanAction(wants);
+    if(wants==='cash'){
+      // Graded immediately
+      const oks=['✅ Scanned ticket correctly','✅ Paid out cash to customer: $'+scanTicket.winAmount+'.00'];
+      const errs=[];
+      const att={isCorrect:true,oks,errs,type:'scan',desc:scanTicket.presentPhrase,order:{sentence:scanTicket.presentPhrase}};
+      setAttempts(p=>{const n=[...p,att];setActiveIdx(n.length-1);return n;});
+      setScanPhase('done');setScenarioDone(true);
+    } else if(wants==='leave'){
+      const oks=['✅ Scanned ticket correctly','✅ Returned ticket to customer'];
+      const att={isCorrect:true,oks,errs:[],type:'scan',desc:scanTicket.presentPhrase,order:{sentence:scanTicket.presentPhrase}};
+      setAttempts(p=>{const n=[...p,att];setActiveIdx(n.length-1);return n;});
+      setScanPhase('done');setScenarioDone(true);
+    } else if(wants==='playAgain'||wants==='buyNew'){
+      // Generate a new order for play-again flow
+      const o=generateOrder(diff);setOrder(o);setUsr(defaultUsr);setResult(null);setPrintedTickets([]);
+      setScanPhase('playAgain');
+    }
+  };
+
+  // Check if customer decision matches what was expected
+  const getScanDecisionCorrectness=(action,ticket)=>{
+    if(ticket.customerWants==='cash') return action==='cash';
+    if(ticket.customerWants==='leave') return action==='leave';
+    if(ticket.customerWants==='playAgain'||ticket.customerWants==='buyNew') return action==='playAgain'||action==='buyNew';
+    return false;
+  };
+
+  const handleSelectGame=(id)=>{if(result) return;setUsr(p=>({...defaultUsr,selectedGame:id}));};
 
   const canSubmit=useCallback(()=>{
     if(!usr.selectedGame||result) return false;
-    const g=GAMES[usr.selectedGame];
-    if(!g) return false;
+    const g=GAMES[usr.selectedGame];if(!g)return false;
     if(g.id==='lightning') return usr.boards!==null;
     if(g.id==='joker'||g.id==='cardlotto') return usr.selections!==null&&usr.addOn!==null;
     if(g.id==='powerbux') return usr.boards!==null&&usr.draws!==null;
@@ -651,58 +480,135 @@ function App(){
     return base;
   },[usr,result]);
 
-  const handleSubmit=useCallback(()=>{
+  const handlePrint=useCallback(()=>{
     if(!canSubmit()) return;
     const r=validate(order,usr);
-    setAttempts(p=>{const n=[...p,{isCorrect:r.isCorrect,errs:r.errs,oks:r.oks,order:{...order},userState:{...usr}}];
-      setActiveIdx(n.length-1); return n;});
+    // Add ticket to deck
+    const tid=++printIdRef.current;
+    const g=GAMES[order.gameId];
+    const fakeTicket={...order,gameId:order.gameId,gameName:g.name,gameCol:g.col,
+      nums:Array.from({length:6},()=>rng(1,49)).sort((a,b)=>a-b),
+      bonus:rng(1,20),boards:usr.boards||1,drawDate:new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'}),
+      id:Math.random().toString(36).substr(2,4).toUpperCase()+'-'+Math.random().toString(36).substr(2,4).toUpperCase(),
+      isWinner:false,_printId:tid};
+    setPrintedTickets(p=>[...p,fakeTicket]);
     setResult(r);
     if(isVoice) setTextRevealed(true);
-  },[order,usr,canSubmit,isVoice]);
+    // If this is a play-again flow, record combined attempt
+    if(scanPhase==='playAgain'){
+      const decisionOk=getScanDecisionCorrectness(userScanAction,scanTicket);
+      const oks=['✅ Scanned ticket correctly'];
+      const errs=[];
+      if(decisionOk) oks.push(`✅ Correctly processed customer's "${userScanAction}" request`);
+      else errs.push(`❌ Customer wanted "${scanTicket.customerWants}" but you chose "${userScanAction}"`);
+      if(r.isCorrect) oks.push('✅ Play-again order entered correctly');
+      else errs.push('❌ Play-again order had errors (see below)',...r.errs);
+      oks.push(...r.oks.filter(o=>o.startsWith('✅')));
+      const att={isCorrect:errs.length===0,oks,errs,type:'scan',desc:scanTicket.presentPhrase,order:{sentence:scanTicket.presentPhrase}};
+      setAttempts(p=>{const n=[...p,att];setActiveIdx(n.length-1);return n;});
+      setScanPhase('done');setScenarioDone(true);
+    } else {
+      // Regular order - record attempt
+      const att={isCorrect:r.isCorrect,oks:r.oks,errs:r.errs,type:'order',order:{...order}};
+      setAttempts(p=>{const n=[...p,att];setActiveIdx(n.length-1);return n;});
+    }
+  },[canSubmit,order,usr,isVoice,scanPhase,userScanAction,scanTicket]);
 
-  if(screen==='settings') return <SettingsScreen diff={diff} setDiff={setDiff} mode={mode} setMode={setMode} onStart={startGame}/>;
-  if(!order) return null;
+  const handleHand=useCallback(()=>{
+    setHanding(true);
+    setTimeout(()=>{setPrintedTickets([]);setHanding(false);setTicketsDone(true);},600);
+  },[]);
 
   const currentGame=usr.selectedGame?GAMES[usr.selectedGame]:null;
   const di=DIFF_INFO[diff];
 
+  const showTopBar=scenarioType==='order'||(scenarioType==='scan'&&(scanPhase==='playAgain'));
+  const showGameScreen=showTopBar;
+  const showScanPanel=scenarioType==='scan'&&(scanPhase==='presenting'||scanPhase==='revealed');
+
+  // Customer decision buttons for scan
+  const showDecisionButtons=scanPhase==='revealed';
+
+  if(screen==='settings') return <SettingsScreen diff={diff} setDiff={setDiff} mode={mode} setMode={setMode} onStart={startGame}/>;
+
   return(
     <div style={{minHeight:'100vh',background:'linear-gradient(180deg,#1a3a8c,#0a1845)',display:'flex',flexDirection:'column'}}>
-      <TopBar selected={usr.selectedGame} onSelect={handleSelectGame}/>
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'5px 12px',background:'#070e30',borderBottom:'1px solid #1a2a70'}}>
-        <span style={{color:'#ffd700',fontWeight:'bold',fontSize:11,letterSpacing:1}}>LOTTERY TRAINING SIMULATOR</span>
+      {showTopBar&&<TopBar selected={usr.selectedGame} onSelect={handleSelectGame}/>}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'4px 12px',background:'#070e30',borderBottom:'1px solid #1a2a70'}}>
+        <span style={{color:'#ffd700',fontWeight:'bold',fontSize:11,letterSpacing:1}}>🎰 LOTTERY TRAINING</span>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <span style={{fontSize:11,color:diff==='insane'?'#ff4444':diff==='hard'?'#ff8844':diff==='medium'?'#ffd700':'#44ff88'}}>
-            {di.emoji} {di.label}
-          </span>
-          <span style={{fontSize:11,color:'#6677aa'}}>{isVoice?'🔊 Voice':'📝 Text'}</span>
-          <button onClick={()=>{window.speechSynthesis.cancel();setScreen('settings');}}
-            style={{fontSize:10,padding:'3px 8px',background:'#1a2a70',border:'1px solid #3a5aaa',borderRadius:4,color:'#8899cc',cursor:'pointer'}}>
-            ⚙ Settings
-          </button>
+          <span style={{fontSize:10,color:diff==='insane'?'#ff4444':diff==='hard'?'#ff8844':diff==='medium'?'#ffd700':'#44ff88'}}>{di.emoji} {di.label}</span>
+          {scenarioType==='scan'&&<span style={{fontSize:10,color:'#00cfff',background:'rgba(0,150,255,.15)',padding:'2px 6px',borderRadius:4,border:'1px solid #00cfff44'}}>🎫 TICKET SCAN</span>}
+          <button onClick={()=>{window.speechSynthesis.cancel();setScreen('settings');}} style={{fontSize:10,padding:'3px 8px',background:'#1a2a70',border:'1px solid #3a5aaa',borderRadius:4,color:'#8899cc',cursor:'pointer'}}>⚙ Settings</button>
         </div>
       </div>
 
       <div className="main-flex" style={{display:'flex',flex:1,gap:10,padding:10,alignItems:'flex-start'}}>
+        {/* LEFT */}
         <div style={{flex:'1 1 250px',display:'flex',flexDirection:'column',gap:10,minWidth:220}}>
-          <OrderPanel order={order} isVoice={isVoice} onPlay={handlePlay} onStop={handleStop}
-            isPlaying={isPlaying} voiceGender={voiceGender} result={result}
-            textRevealed={textRevealed} onNext={nextOrder}/>
+          <CustomerPanel
+            scenarioType={scenarioType} order={order} scanTicket={scanTicket} scanPhase={scanPhase}
+            isVoice={isVoice} isPlaying={isPlaying} voiceGender={voiceGender}
+            onPlay={()=>{setIsPlaying(true);speak(order.sentence,voiceGender,diff,()=>setIsPlaying(false));}}
+            onStop={()=>{window.speechSynthesis.cancel();setIsPlaying(false);}}
+            result={result} textRevealed={textRevealed} onNext={newScenario}
+          />
           <AttemptsPanel attempts={attempts} activeIdx={activeIdx} setActiveIdx={setActiveIdx}/>
         </div>
+
+        {/* RIGHT */}
         <div style={{flex:'2 1 360px',display:'flex',flexDirection:'column',gap:10}}>
-          <GameScreen game={currentGame} usr={usr} setUsr={setUsr} locked={!!result}/>
-          <div style={{display:'flex',gap:10,alignItems:'center',background:'rgba(8,20,70,.7)',border:'2px solid #3a5aaa',borderRadius:8,padding:'9px 13px'}}>
-            <div style={{flex:1}}>
-              <div style={{color:'#7788bb',fontSize:10}}>Customer Total</div>
-              <div style={{color:'#ffd700',fontSize:17,fontWeight:'bold'}}>$0.00</div>
+
+          {/* Scan panel */}
+          {showScanPanel&&<ScanPanel ticket={scanTicket} scanPhase={scanPhase} onScan={handleScan} scanning={scanning}/>}
+
+          {/* Customer decision buttons */}
+          {showDecisionButtons&&(
+            <div style={{background:'rgba(8,20,70,.7)',border:'2px solid #3a5aaa',borderRadius:8,padding:14}}>
+              <div style={{color:'#ffd700',fontWeight:'bold',fontSize:11,marginBottom:10,letterSpacing:1}}>CUSTOMER DECISION — What does the customer want?</div>
+              <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                {scanTicket?.isWinner&&<>
+                  <button className="act-btn" style={{background:'#005500',borderColor:'#00aa00',color:'white'}} onClick={()=>handleScanDecision('cash')}>💵 Pay Out Cash ${scanTicket.winAmount}</button>
+                  <button className="act-btn" style={{background:'#004488',borderColor:'#0088ff',color:'white'}} onClick={()=>handleScanDecision('playAgain')}>🎫 Play Again (use winnings)</button>
+                </>}
+                {!scanTicket?.isWinner&&<>
+                  <button className="act-btn" style={{background:'#004488',borderColor:'#0088ff',color:'white'}} onClick={()=>handleScanDecision('buyNew')}>🎫 Buy New Ticket</button>
+                  <button className="act-btn" style={{background:'#444',borderColor:'#888',color:'white'}} onClick={()=>handleScanDecision('leave')}>↩ Return Ticket / Done</button>
+                </>}
+              </div>
             </div>
-            <button className="act-btn" style={{background:'#440000',borderColor:'#aa0000',color:'white'}} onClick={nextOrder}>Cancel</button>
-            <button className="act-btn"
-              style={{background:canSubmit()?'#004400':'#1a1a1a',borderColor:canSubmit()?'#008800':'#333',color:canSubmit()?'white':'#555',cursor:canSubmit()?'pointer':'not-allowed'}}
-              onClick={handleSubmit} disabled={!canSubmit()}>🎫 Print Ticket</button>
-          </div>
-          {!result&&(
+          )}
+
+          {/* Game screen (order mode or play-again) */}
+          {showGameScreen&&(
+            <div>
+              {scanPhase==='playAgain'&&order&&(
+                <div style={{background:'rgba(0,80,0,.2)',border:'1px solid #00aa00',borderRadius:6,padding:'6px 12px',marginBottom:8,fontSize:11,color:'#88ff88'}}>
+                  🔄 PLAY AGAIN — Now enter the customer's new order below
+                </div>
+              )}
+              <GameScreen game={currentGame} usr={usr} setUsr={setUsr} locked={!!result}/>
+            </div>
+          )}
+
+          {/* Print deck */}
+          {printedTickets.length>0&&<PrintDeck tickets={printedTickets} onHand={handleHand} handing={handing}/>}
+
+          {/* Bottom bar */}
+          {(scenarioType==='order'||scanPhase==='playAgain')&&(
+            <div style={{display:'flex',gap:10,alignItems:'center',background:'rgba(8,20,70,.7)',border:'2px solid #3a5aaa',borderRadius:8,padding:'9px 13px'}}>
+              <div style={{flex:1}}>
+                <div style={{color:'#7788bb',fontSize:10}}>Customer Total</div>
+                <div style={{color:'#ffd700',fontSize:17,fontWeight:'bold'}}>$0.00</div>
+              </div>
+              <button className="act-btn" style={{background:'#440000',borderColor:'#aa0000',color:'white'}} onClick={newScenario}>Cancel</button>
+              <button className="act-btn"
+                style={{background:canSubmit()?'#004400':'#1a1a1a',borderColor:canSubmit()?'#008800':'#333',color:canSubmit()?'white':'#555',cursor:canSubmit()?'pointer':'not-allowed'}}
+                onClick={handlePrint} disabled={!canSubmit()}>🎫 Print Ticket</button>
+            </div>
+          )}
+
+          {!result&&showGameScreen&&(
             <div style={{color:'#445588',fontSize:11,textAlign:'center'}}>
               {!usr.selectedGame?'Select a game tab → set params → Print Ticket':canSubmit()?'Ready — press Print Ticket':'Fill in all required fields'}
             </div>
@@ -714,6 +620,4 @@ function App(){
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
-</script>
-</body>
-</html>
+</script></body></html>
